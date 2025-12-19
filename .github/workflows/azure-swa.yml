@@ -1,4 +1,4 @@
-name: Deploy Ameen v8.5 to Azure Static Web Apps
+name: Deploy Ameen AI v8.5
 
 on:
   push:
@@ -11,21 +11,21 @@ permissions:
   pull-requests: write
 
 jobs:
-  build_and_deploy:
+  deploy:
     runs-on: ubuntu-latest
+    name: Deploy to Azure Static Web Apps
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # إن كان لديك خطوة بناء (Vite/Next)، أضفها هنا قبل النشر.
-      # لموقع ستاتيكي بسيط، يكفي النشر مباشرة.
-
-      - name: Deploy to Azure Static Web Apps
+      - name: Deploy to Azure SWA
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"          # مسار التطبيق (الجذر)
-          api_location: ""           # مسار API (فارغ لعدم وجود API)
-          output_location: "/"       # مسار الخرج (الجذر)
+          app_location: "/"
+          api_location: ""
+          output_location: "/"
+          skip_app_build: true
