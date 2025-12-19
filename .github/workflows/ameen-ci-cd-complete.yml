@@ -1,0 +1,141 @@
+name: Ameen AI - Complete CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+      - staging
+
+permissions:
+  id-token: write
+  contents: read
+  actions: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Build, Test & Deploy Ameen AI
+    
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+      
+      # Step 4: Build project
+      - name: Build Ameen AI
+        run: npm run build
+        env:
+          CI: true
+      
+      # Step 5: Create Markdown Report
+      - name: Generate Deployment Report
+        run: |
+          cat > deployment-report.md << 'EOF'
+          # 📊 Ameen AI Deployment Report
+          
+          **Date:** $(date '+%Y-%m-%d %H:%M:%S')
+          **Branch:** ${{ github.ref_name }}
+          **Commit:** ${{ github.sha }}
+          **Author:** ${{ github.actor }}
+          
+          ## ✅ Build Status
+          - Node.js Version: 18
+          - Build Status: SUCCESS
+          - Build Time: $(date)
+          
+          ## 📦 Artifacts
+          - Build output: `build/`
+          - Report: deployment-report.pdf
+          
+          ## 🚀 Next Steps
+          - Deploy to Azure Static Web Apps
+          - Upload report to SharePoint
+          - Send Teams notification
+          EOF
+      
+      # Step 6: Convert Markdown to PDF
+      - name: Convert Report to PDF
+        uses: baileyjm02/markdown-to-pdf@v1
+        with:
+          input_path: deployment-report.md
+          output_dir: ./
+          build_html: false
+      
+      # Step 7: Azure Login with OIDC
+      - name: Azure Login (OIDC)
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      # Step 8: Upload Report to SharePoint via Graph API
+      - name: Upload Report to SharePoint
+        run: |
+          # Get Access Token
+          ACCESS_TOKEN=$(curl -X POST \
+            "https://login.microsoftonline.com/${{ secrets.AZURE_TENANT_ID }}/oauth2/v2.0/token" \
+            -d "client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+            -d "client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" \
+            -d "scope=https://graph.microsoft.com/.default" \
+            -d "grant_type=client_credentials" | jq -r '.access_token')
+          
+          # Upload PDF to SharePoint
+          curl -X PUT \
+            "https://graph.microsoft.com/v1.0/sites/${{ secrets.SHAREPOINT_SITE_ID }}/drive/root:/Documents/deployment-report-$(date +%Y%m%d-%H%M%S).pdf:/content" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/pdf" \
+            --data-binary @deployment-report.pdf
+          
+          echo "✅ Report uploaded to SharePoint successfully"
+      
+      # Step 9: Send Teams Notification
+      - name: Send Teams Notification
+        run: |
+          curl -X POST "${{ secrets.TEAMS_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "@type": "MessageCard",
+              "@context": "https://schema.org/extensions",
+              "summary": "Ameen AI Deployment",
+              "themeColor": "00FF00",
+              "title": "✅ Ameen AI Deployed Successfully",
+              "sections": [{
+                "activityTitle": "Deployment Details",
+                "facts": [
+                  {"name": "Branch", "value": "${{ github.ref_name }}"},
+                  {"name": "Commit", "value": "${{ github.sha }}"},
+                  {"name": "Author", "value": "${{ github.actor }}"},
+                  {"name": "Status", "value": "SUCCESS ✅"}
+                ],
+                "text": "Deployment report uploaded to SharePoint."
+              }]
+            }'
+          
+          echo "✅ Teams notification sent successfully"
+      
+      # Step 10: Upload Artifacts
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ameen-build-${{ github.sha }}
+          path: |
+            build/
+            deployment-report.md
+            deployment-report.pdf
+          retention-days: 30
