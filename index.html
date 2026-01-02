@@ -1,31 +1,32 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ameen AI v8.5 - نظام محادثة ذكي</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script type="importmap">
-    {
-        "imports": {
-            "react": "https://esm.sh/react@18",
-            "react-dom": "https://esm.sh/react-dom@18",
-            "lottie-web": "https://esm.sh/lottie-web@5"
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ameen AI v8.5</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    window.ENV = {
+        API_BASE_URL: '/api',
+        USE_MOCK_API: 'false'
+    };
+</script>
+<script type="importmap">
+{
+    "imports": {
+        "react": "https://esm.sh/react@18",
+        "react-dom": "https://esm.sh/react-dom@18",
+        "lottie-web": "https://esm.sh/lottie-web@5"
     }
-    </script>
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .glow {
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-        }
-    </style>
+}
+</script>
+<style>
+    body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+</style>
 </head>
 <body class="min-h-screen text-white">
-    <div id="root"></div>
-    <script type="module" src="./index.js"></script>
+<div id="root"></div>
+<script type="module" src="./index.js"></script>
 </body>
 </html>
